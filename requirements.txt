@@ -1,0 +1,5 @@
+streamlit
+sqlite3"For Database Management"
+bcrypt"For Hashing Passwords"
+streamlit-extras"streamlit-extras is a collection of useful utilities and components for Streamlit applications."
+streamlit-option-menu
