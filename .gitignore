@@ -1,0 +1,16 @@
+sqllite3.dll
+sqlcipher.dll   
+DB Browser for SQLite.app
+DB Browser for SQLite.exe
+DB BROwser for SQLCIPHER.app
+DB Browser for SQLCIPHER.exe
+Qt5Concurrent.dll
+Qt5Core.dll
+Qt5Gui.dll
+Qt5Network.dll
+Qt5PrintSupport.dll
+Qt5Svg.dll
+Qt5Widgets.dll
+Qt5Xml.dll
+libcrypto-1_1-x64.dll
+libssl-1_1-x64.dll
