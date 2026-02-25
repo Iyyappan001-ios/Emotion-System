@@ -1,4 +1,3 @@
-sqllite3.dll
 sqlcipher.dll   
 DB Browser for SQLite.app
 DB Browser for SQLite.exe
@@ -14,3 +13,4 @@ Qt5Widgets.dll
 Qt5Xml.dll
 libcrypto-1_1-x64.dll
 libssl-1_1-x64.dll
+sqlite3.dll
