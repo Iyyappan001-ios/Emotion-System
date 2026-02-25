@@ -14,3 +14,5 @@ Qt5Xml.dll
 libcrypto-1_1-x64.dll
 libssl-1_1-x64.dll
 sqlite3.dll
+DB Browser for SQLCipher.exe
+DB Browser for SQLite.exe
