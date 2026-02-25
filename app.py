@@ -1,6 +1,18 @@
 import streamlit as st
 import streamlit_option_menu
+import database
 
+# -------------------- SESSION STATE INIT --------------------
+if 'user_id' not in st.session_state:
+    st.session_state.user_id = None
+if 'username' not in st.session_state:
+    st.session_state.username = None
+if 'email' not in st.session_state:
+    st.session_state.email = None
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+if 'redirect_to' not in st.session_state:
+    st.session_state.redirect_to = None
 
 # -------------------- PAGE CONFIG --------------------
 st.set_page_config(
@@ -19,20 +31,13 @@ html, body, [class*="css"] {
 }
 
 .stApp {
-    background: 
-        radial-gradient(1200px 600px at 10% 10%, rgba(108, 99, 255, 0.25), transparent 40%),
-        radial-gradient(1000px 500px at 90% 20%, rgba(0, 210, 255, 0.25), transparent 40%),
-        linear-gradient(180deg, #0b0e2b 0%, #0f1226 100%);
-    color: #f5f7ff !important;
+    background: linear-gradient(180deg, #5c6bc0 0%, #7986cb 100%);
+    color: #ffffff !important;
 }
 
-/* Force white background override for visibility */
 [data-testid="stApp"] {
-    background: 
-        radial-gradient(1200px 600px at 10% 10%, rgba(108, 99, 255, 0.25), transparent 80%),
-        radial-gradient(1000px 500px at 90% 20%, rgba(0, 210, 255, 0.25), transparent 80%),
-        linear-gradient(180deg, #0b0e2b 0%, #0f1226 100%) !important;
-    color: #f5f7ff !important;
+    background: linear-gradient(180deg, #5c6bc0 0%, #7986cb 100%) !important;
+    color: #ffffff !important;
 }
 
 /* Header Styles */
@@ -40,8 +45,9 @@ html, body, [class*="css"] {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 24px 8%;s
-    
+    padding: 24px 8%;
+    background: rgba(26, 35, 126, 0.98);
+    border-bottom: 1px solid rgba(108, 99, 255, 0.3);
 }
 
 .logo {
@@ -50,7 +56,7 @@ html, body, [class*="css"] {
     gap: 12px;
     font-weight: 700;
     font-size: 1.2rem;
-    color: #f5f7ff !important;
+    color: #ffffff !important;
 }
 
 .logo svg {
@@ -64,14 +70,14 @@ html, body, [class*="css"] {
 nav a {
     margin-left: 28px;
     text-decoration: none;
-    color: #f5f7ff !important;
+    color: #ffffff !important;
     opacity: 0.85;
     font-weight: 400;
 }
 
 nav a:hover {
     opacity: 1;
-    color: #ffffff !important;
+    color: #00d2ff !important;
 }
 
 /* Hero Section */
@@ -87,7 +93,7 @@ nav a:hover {
     font-size: 3rem;
     line-height: 1.2;
     margin-bottom: 20px;
-    color: #f5f7ff !important;
+    color: #1a1a2e !important;
 }
 
 .hero p {
@@ -95,7 +101,7 @@ nav a:hover {
     opacity: 0.9;
     max-width: 520px;
     margin-bottom: 32px;
-    color: #e0e0e0 !important;
+    color: #495057 !important;
 }
 
 /* Buttons */
@@ -119,8 +125,8 @@ nav a:hover {
 
 .btn-outline {
     background: transparent;
-    color: #f5f7ff;
-    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: #1a1a2e;
+    border: 1px solid rgba(26, 26, 46, 0.3);
     padding: 14px 28px;
     border-radius: 30px;
     font-weight: 600;
@@ -130,22 +136,23 @@ nav a:hover {
 }
 
 .btn-outline:hover {
-    border-color: rgba(255, 255, 255, 0.6);
+    border-color: #6c63ff;
+    color: #6c63ff;
 }
 
 /* Visual Section */
 .visual {
-    background: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.9);
     backdrop-filter: blur(16px);
     border-radius: 24px;
     padding: 28px;
-    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
 }
 
 .visual h3 {
     margin-bottom: 16px;
     font-weight: 600;
-    color: #f5f7ff !important;
+    color: #1a1a2e !important;
 }
 
 .emotion-grid {
@@ -157,10 +164,10 @@ nav a:hover {
 .emotion {
     padding: 18px 12px;
     border-radius: 16px;
-    background: rgba(255, 255, 255, 0.08);
+    background: rgba(108, 99, 255, 0.1);
     text-align: center;
     font-size: 0.9rem;
-    color: #e0e0e0 !important;
+    color: #1a1a2e !important;
 }
 
 /* Features */
@@ -204,7 +211,6 @@ nav a:hover {
 /* How It Works */
 .how-section {
     padding: 80px 8% 100px;
-             
 }
 
 .how-section h2 {
@@ -325,6 +331,25 @@ footer {
     color: #9aa0ff !important;
 }
 
+/* Auth, Dashboard, Admin Buttons */
+.stButton > button {
+    background: linear-gradient(135deg, #ff6b6b, #ffa500) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 30px !important;
+    padding: 12px 28px !important;
+    font-weight: 600 !important;
+    font-family: 'Poppins', sans-serif !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4) !important;
+}
+
+.stButton > button:hover {
+    background: linear-gradient(135deg, #ff5252, #ff9800) !important;
+    transform: scale(1.02) !important;
+    box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6) !important;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
     .hero {
@@ -351,23 +376,35 @@ st.markdown("""
         </svg>
         EmoRecs
     </div>
-    <nav>
-        <a href="#features" style="margin-left: 28px; text-decoration: none; color: #f5f7ff; opacity: 0.85;">Features</a>
-        <a href="#how" style="margin-left: 28px; text-decoration: none; color: #f5f7ff; opacity: 0.85;">How it Works</a>
-    </nav>
 </div>
 """, unsafe_allow_html=True)
 
 # -------------------- NAVIGATION --------------------
+# Build menu options based on login status
+if st.session_state.logged_in:
+    menu_options = ["Home", "Features", "How It Works", "Dashboard", "Admin"]
+    menu_icons = ["house", "stars", "diagram-3", "person-circle", "shield-check"]
+    default_idx = 0
+    if st.session_state.redirect_to == "Auth":
+        st.session_state.redirect_to = None
+        default_idx = 3
+else:
+    menu_options = ["Home", "Features", "How It Works", "Auth"]
+    menu_icons = ["house", "stars", "diagram-3", "person-circle"]
+    default_idx = 0
+    if st.session_state.redirect_to == "Auth":
+        st.session_state.redirect_to = None
+        default_idx = 3
+
 selected = streamlit_option_menu.option_menu(
     menu_title=None,
-    options=["Home", "Features", "How It Works", "Auth"],
-    icons=["house", "stars", "diagram-3", "person-circle"],
+    options=menu_options,
+    icons=menu_icons,
     orientation="horizontal",
-    default_index=0,
+    default_index=default_idx,
     styles={
         "container": {"padding": "0"},
-        "nav-link": {"color": "#070E9EB1", "opacity": "0.85"},
+        "nav-link": {"color": "#F0540BFF", "opacity": "0.85"},
         "nav-link-selected": {"background": "linear-gradient(135deg, #6c63ff, #00d2ff)", "opacity": "1"},
     }
 )
@@ -384,7 +421,7 @@ if selected == "Home":
                 then recommends movies, music, games, and books that truly match how you feel.
             </p>
             <div style="display: flex; gap: 16px;">
-                <button class="btn-primary">Get Started</button>
+                <button class="btn-primary" onclick="window.location.href='#auth'">Get Started</button>
                 <button class="btn-outline">View Demo</button>
             </div>
         </div>
@@ -473,11 +510,14 @@ elif selected == "Auth":
         password = st.text_input("Password", type="password", key="signup_password", placeholder="Password")
         
         if st.button("Create Account", key="signup_btn"):
-            st.success("Account created successfully!")
-        
-        st.markdown("""
-        <p class="terms">By signing up, you agree to our <a href="#">Terms</a> & <a href="#">Privacy Policy</a>.</p>
-        """, unsafe_allow_html=True)
+            if name and email and password:
+                success, message = database.register_user(name, email, password)
+                if success:
+                    st.success(message)
+                else:
+                    st.error(message)
+            else:
+                st.warning("Please fill in all fields!")
     
     with col2:
         st.markdown("""
@@ -490,11 +530,127 @@ elif selected == "Auth":
         password_login = st.text_input("Password", type="password", key="login_password", placeholder="Password")
         
         if st.button("Login", key="login_btn"):
-            st.success("Login successful!")
-        
+            if email_login and password_login:
+                success, user_data, message = database.login_user(email_login, password_login)
+                if success:
+                    st.session_state.logged_in = True
+                    st.session_state.user_id = user_data['id']
+                    st.session_state.username = user_data['username']
+                    st.session_state.email = user_data['email']
+                    st.success(message)
+                    st.rerun()
+                else:
+                    st.error(message)
+            else:
+                st.warning("Please enter email and password!")
+
+# -------------------- DASHBOARD --------------------
+elif selected == "Dashboard":
+    st.markdown("""
+    <div class="auth-section">
+        <h2>👤 My Dashboard</h2>
+        <p>Welcome back, """ + st.session_state.username + """!</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # User info card
+    col1, col2 = st.columns(2)
+    with col1:
         st.markdown("""
-        <p class="terms">Forgot password? <a href="#">Reset</a></p>
+        <div class="card">
+            <h3>📧 Account Info</h3>
+            <p><strong>Username:</strong> """ + st.session_state.username + """</p>
+            <p><strong>Email:</strong> """ + st.session_state.email + """</p>
+        </div>
         """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("""
+        <div class="card">
+            <h3>🔐 Quick Actions</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        if st.button("Logout"):
+            st.session_state.logged_in = False
+            st.session_state.user_id = None
+            st.session_state.username = None
+            st.session_state.email = None
+            st.rerun()
+    
+    # User activity
+    st.markdown("""
+    <div class="features-section">
+        <h2>📊 My Activity</h2>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    activities = database.get_user_activity(st.session_state.user_id)
+    if activities:
+        for activity in activities[:10]:
+            st.markdown(f"""
+            <div class="step">
+                <h4>{activity['action']}</h4>
+                <p>{activity['details']} - {activity['timestamp']}</p>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.info("No activity yet!")
+
+# -------------------- ADMIN --------------------
+elif selected == "Admin":
+    st.markdown("""
+    <div class="auth-section">
+        <h2>🛡️ Admin Dashboard</h2>
+        <p>View all registered users and system data</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Get stats
+    stats = database.get_database_stats()
+    
+    # Display stats
+    col1, col2, col3, col4 = st.columns(4)
+    with col1:
+        st.metric("Total Users", stats.get('total_users', 0))
+    with col2:
+        st.metric("Total Activities", stats.get('total_activities', 0))
+    with col3:
+        st.metric("Emotion Logs", stats.get('total_emotion_logs', 0))
+    with col4:
+        st.metric("New Users (7 days)", stats.get('new_users_7days', 0))
+    
+    # Tabs for data
+    tab1, tab2, tab3 = st.tabs(["📋 Users", "📝 Activity Logs", "😊 Emotion Logs"])
+    
+    with tab1:
+        st.markdown("Registered Users")
+        users = database.get_all_users()
+        if users:
+            import pandas as pd
+            df = pd.DataFrame(users)
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.info("No users registered yet!")
+    
+    with tab2:
+        st.markdown(" User Activity")
+        activities = database.get_user_activity()
+        if activities:
+            import pandas as pd
+            df = pd.DataFrame(activities)
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.info("No activity recorded yet!")
+    
+    with tab3:
+        st.markdown("Emotion Detection Logs")
+        emotion_logs = database.get_emotion_logs()
+        if emotion_logs:
+            import pandas as pd
+            df = pd.DataFrame(emotion_logs)
+            st.dataframe(df, use_container_width=True)
+        else:
+            st.info("No emotion logs recorded yet!")
 
 # -------------------- FOOTER --------------------
 st.markdown("""
