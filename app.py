@@ -1,8 +1,9 @@
 import streamlit as st
 import streamlit_option_menu
 import database
+import camera_detection
 
-# -------------------- SESSION STATE INIT --------------------
+# SESSION STATE INIT 
 if 'user_id' not in st.session_state:
     st.session_state.user_id = None
 if 'username' not in st.session_state:
@@ -13,15 +14,19 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'redirect_to' not in st.session_state:
     st.session_state.redirect_to = None
+if 'camera_active' not in st.session_state:
+    st.session_state.camera_active = False
+if 'detector' not in st.session_state:
+    st.session_state.detector = None
 
-# -------------------- PAGE CONFIG --------------------
+#PAGE CONFIG
 st.set_page_config(
     page_title="EmoRecs | Emotion-Based Recommendation System",
     page_icon="😊",
     layout="wide"
 )
 
-# -------------------- CUSTOM CSS --------------------s
+# CUSTOM CSS 
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
@@ -364,7 +369,7 @@ footer {
 </style>
 """, unsafe_allow_html=True)
 
-# -------------------- HEADER --------------------
+# HEADER 
 st.markdown("""
 <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px 8%; background: rgba(11, 14, 43, 0.95); border-bottom: 1px solid rgba(108, 99, 255, 0.3);">
     <div style="display: flex; align-items: center; gap: 12px; font-weight: 700; font-size: 1.2rem; color: #f5f7ff;">
@@ -379,22 +384,42 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# -------------------- NAVIGATION --------------------
-# Build menu options based on login status
+#  SIDEBAR NAVIGATION
 if st.session_state.logged_in:
-    menu_options = ["Home", "Features", "How It Works", "Dashboard", "Admin"]
-    menu_icons = ["house", "stars", "diagram-3", "person-circle", "shield-check"]
-    default_idx = 0
-    if st.session_state.redirect_to == "Auth":
-        st.session_state.redirect_to = None
-        default_idx = 3
+    sidebar_options = ["Home", "Features", "How It Works", "Detect Emotion", "Dashboard", "Admin"]
+else:
+    sidebar_options = ["Home", "Features", "How It Works", "Auth"]
+
+# Reset sidebar_selected if not in current options (e.g., after login/logout)
+if 'sidebar_selected' not in st.session_state or st.session_state.sidebar_selected not in sidebar_options:
+    st.session_state.sidebar_selected = sidebar_options[0]
+
+# Sidebar navigation
+st.sidebar.title(" 1.Navigation")
+sidebar_selection = st.sidebar.radio("Go to:", sidebar_options, index=sidebar_options.index(st.session_state.sidebar_selected))
+
+if sidebar_selection != st.session_state.sidebar_selected:
+    st.session_state.sidebar_selected = sidebar_selection
+    st.rerun()
+# MAIN NAVIGATION
+if st.session_state.logged_in:
+    menu_options = ["Home", "Features", "How It Works", "Detect Emotion", "Dashboard", "Admin"]
+    menu_icons = ["house", "stars", "diagram-3", "camera", "person-circle", "shield-check"]
 else:
     menu_options = ["Home", "Features", "How It Works", "Auth"]
     menu_icons = ["house", "stars", "diagram-3", "person-circle"]
-    default_idx = 0
-    if st.session_state.redirect_to == "Auth":
-        st.session_state.redirect_to = None
-        default_idx = 3
+
+default_idx = menu_options.index(st.session_state.sidebar_selected) if st.session_state.sidebar_selected in menu_options else 0
+
+# Handle redirect after login
+if st.session_state.redirect_to == "Auth":
+    st.session_state.redirect_to = None
+    st.session_state.sidebar_selected = "Auth"
+    default_idx = menu_options.index("Auth") if "Auth" in menu_options else 0
+elif st.session_state.redirect_to == "Detect Emotion":
+    st.session_state.redirect_to = None
+    st.session_state.sidebar_selected = "Detect Emotion"
+    default_idx = menu_options.index("Detect Emotion") if "Detect Emotion" in menu_options else 0
 
 selected = streamlit_option_menu.option_menu(
     menu_title=None,
@@ -409,9 +434,12 @@ selected = streamlit_option_menu.option_menu(
     }
 )
 
-# -------------------- HOME --------------------
+# Sync sidebar with main navigation
+if selected != st.session_state.sidebar_selected:
+    st.session_state.sidebar_selected = selected
+
+# HOME
 if selected == "Home":
-    # Hero Section
     st.markdown("""
     <div style="padding: 80px 8% 120px; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center;">
         <div>
@@ -420,13 +448,9 @@ if selected == "Home":
                 EmoRecs detects your real-time facial emotions using AI and computer vision,
                 then recommends movies, music, games, and books that truly match how you feel.
             </p>
-            <div style="display: flex; gap: 16px;">
-                <button class="btn-primary" onclick="window.location.href='#auth'">Get Started</button>
-                <button class="btn-outline">View Demo</button>
-            </div>
         </div>
         <div class="visual">
-            <h3>Detected Emotions</h3>
+            <h3>Detectable  Emotions</h3>
             <div class="emotion-grid">
                 <div class="emotion">😊 Happy</div>
                 <div class="emotion">😌 Calm</div>
@@ -439,7 +463,7 @@ if selected == "Home":
     </div>
     """, unsafe_allow_html=True)
 
-# -------------------- FEATURES --------------------
+# FEATURES 
 elif selected == "Features":
     st.markdown("""
     <div class="features-section" id="features">
@@ -465,7 +489,7 @@ elif selected == "Features":
     </div>
     """, unsafe_allow_html=True)
 
-# -------------------- HOW IT WORKS --------------------
+# HOW IT WORKS 
 elif selected == "How It Works":
     st.markdown("""
     <div class="how-section" id="how">
@@ -476,7 +500,7 @@ elif selected == "How It Works":
                 <p>Your webcam captures facial expressions in real time.</p>
             </div>
             <div class="step">
-                <h4>2. Analyze Mood</h4>
+                <h4>2. Analyze Emotions through Face</h4>
                 <p>AI models classify emotions using trained datasets.</p>
             </div>
             <div class="step">
@@ -487,7 +511,87 @@ elif selected == "How It Works":
     </div>
     """, unsafe_allow_html=True)
 
-# -------------------- AUTH --------------------
+# DETECT EMOTION 
+elif selected == "Detect Emotion":
+    st.markdown("""
+    <div class="auth-section">
+        <h2>📸 Detect Your Emotion</h2>
+        <p>Use your camera to detect your current emotional state</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Camera controls
+    col1, col2 = st.columns([1, 3])
+    
+    with col1:
+        st.markdown("""
+        <div class="card">
+            <h3>🎮 Camera Controls</h3>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Start/Stop camera button
+        if not st.session_state.camera_active:
+            if st.button("📷 Start Camera", key="start_camera"):
+                # Initialize camera
+                detector = camera_detection.CameraDetector()
+                success, message = detector.initialize()
+                if success:
+                    st.session_state.detector = detector
+                    st.session_state.camera_active = True
+                    st.rerun()
+                else:
+                    st.error(message)
+        else:
+            if st.button("⏹️ Stop Camera", key="stop_camera"):
+                if st.session_state.detector:
+                    st.session_state.detector.release()
+                st.session_state.detector = None
+                st.session_state.camera_active = False
+                st.rerun()
+        
+        # Camera info
+        st.markdown("""
+        <div class="card" style="margin-top: 20px;">
+            <h4> Instructions</h4>
+            <p>1. Click "Start Camera" to begin</p>
+            <p>2. Allow camera access when prompted</p>
+            <p>3. Position your face in the frame</p>
+            <p>4. The system will detect your emotion</p>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        if st.session_state.camera_active and st.session_state.detector:
+            # Get camera frame
+            success, frame = st.session_state.detector.get_frame()
+            
+            if success and frame is not None:
+                # Process frame for face detection
+                processed_frame, faces = st.session_state.detector.process_frame(frame)
+                
+                # Convert to image for display
+                img = camera_detection.convert_frame_to_image(processed_frame)
+                st.image(img, caption="Live Camera Feed - Face Detection", use_container_width=True)
+                
+                # Display detection results
+                if len(faces) > 0:
+                    st.success(f"✓ Detected {len(faces)} face(s)!")
+                else:
+                    st.warning("No face detected. Please position your face in the frame.")
+            else:
+                st.error("Unable to capture frame. Please check your camera.")
+        else:
+            st.markdown("""
+            <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: rgba(255,255,255,0.1); border-radius: 20px;">
+                <div style="text-align: center;">
+                    <p style="font-size: 4rem;">📷</p>
+                    <p style="font-size: 1.2rem; color: #e0e0e0;">Click "Start Camera" to begin emotion detection</p>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+#  AUTH
 elif selected == "Auth":
     st.markdown("""
     <div class="auth-section" id="auth">
@@ -501,7 +605,7 @@ elif selected == "Auth":
     with col1:
         st.markdown("""
         <div class="signup-card">
-            <h3>✨ Sign Up</h3>
+            <h3> Sign Up</h3>
             <p>New here? Create your EmoRecs account.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -522,7 +626,7 @@ elif selected == "Auth":
     with col2:
         st.markdown("""
         <div class="card">
-            <h3>🔐 Login</h3>
+            <h3> Login</h3>
             <p>Access your personalized Emotion-Based Recommendations.</p>
         </div>
         """, unsafe_allow_html=True)
@@ -537,6 +641,7 @@ elif selected == "Auth":
                     st.session_state.user_id = user_data['id']
                     st.session_state.username = user_data['username']
                     st.session_state.email = user_data['email']
+                    st.session_state.redirect_to = "Detect Emotion"  # Redirect to camera after login
                     st.success(message)
                     st.rerun()
                 else:
@@ -544,7 +649,7 @@ elif selected == "Auth":
             else:
                 st.warning("Please enter email and password!")
 
-# -------------------- DASHBOARD --------------------
+# DASHBOARD
 elif selected == "Dashboard":
     st.markdown("""
     <div class="auth-section">
@@ -567,7 +672,7 @@ elif selected == "Dashboard":
     with col2:
         st.markdown("""
         <div class="card">
-            <h3>🔐 Quick Actions</h3>
+            <h3> Quick Actions</h3>
         </div>
         """, unsafe_allow_html=True)
         if st.button("Logout"):
@@ -596,7 +701,7 @@ elif selected == "Dashboard":
     else:
         st.info("No activity yet!")
 
-# -------------------- ADMIN --------------------
+# ADMIN
 elif selected == "Admin":
     st.markdown("""
     <div class="auth-section">
@@ -652,7 +757,7 @@ elif selected == "Admin":
         else:
             st.info("No emotion logs recorded yet!")
 
-# -------------------- FOOTER --------------------
+# FOOTER
 st.markdown("""
 <hr style="border: 1px solid rgba(255, 255, 255, 0.2); margin-top: 40px;">
 <footer>© 2026 EmoRecs · Emotion-Based Recommendation System</footer>""", unsafe_allow_html=True)

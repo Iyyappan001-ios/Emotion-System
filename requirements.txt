@@ -4,3 +4,6 @@ bcrypt
 streamlit-extras
 streamlit-option-menu
 pandas
+opencv-python
+numpy
+Pillow
