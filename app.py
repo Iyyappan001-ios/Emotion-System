@@ -2,6 +2,7 @@ import streamlit as st
 import streamlit_option_menu
 import database
 import camera_detection
+import time
 
 # SESSION STATE INIT 
 if 'user_id' not in st.session_state:
@@ -18,6 +19,15 @@ if 'camera_active' not in st.session_state:
     st.session_state.camera_active = False
 if 'detector' not in st.session_state:
     st.session_state.detector = None
+# timestamp used to optionally auto‑stop the camera after a period
+if 'camera_start_time' not in st.session_state:
+    st.session_state.camera_start_time = None
+if 'age' not in st.session_state:
+    st.session_state.age = None
+if 'avatar' not in st.session_state:
+    st.session_state.avatar = None
+if 'show_profile_upload' not in st.session_state:
+    st.session_state.show_profile_upload = False
 
 #PAGE CONFIG
 st.set_page_config(
@@ -366,6 +376,161 @@ footer {
         font-size: 2.3rem;
     }
 }
+
+/* Admin Users Table Styling */
+.admin-users-section {
+    background: linear-gradient(135deg, #1e1e2f 0%, #2d1b4e 50%, #1a1a3e 100%);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4), 0 0 60px rgba(108, 99, 255, 0.15);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    margin-top: 20px;
+}
+
+.admin-users-section h3 {
+    color: #ffffff !important;
+    font-weight: 600;
+    margin-bottom: 16px;
+    font-size: 1.3rem;
+    text-shadow: 0 2px 10px rgba(108, 99, 255, 0.5);
+}
+
+.admin-users-section .stDataFrame {
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+/* DataFrame Custom Styling */
+[data-testid="stDataFrame"] {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border-radius: 12px !important;
+}
+
+/* Table Header */
+[data-testid="stDataFrame"] thead th {
+    background: linear-gradient(135deg, #6c63ff, #00d2ff) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    padding: 14px !important;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Table Body */
+[data-testid="stDataFrame"] tbody td {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #e0e0e0 !important;
+    padding: 12px 14px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Table Row Hover */
+[data-testid="stDataFrame"] tbody tr:hover td {
+    background: rgba(108, 99, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+/* Alternate Row Colors */
+[data-testid="stDataFrame"] tbody tr:nth-child(even) td {
+    background: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Tab Container Styling */
+.users-tab-content {
+    background: linear-gradient(135deg, #232136 0%, #2a2045 100%);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Stats Cards Enhancement */
+.stats-card {
+    background: linear-gradient(135deg, #2d1b4e, #1e1e2f) !important;
+    border: 1px solid rgba(108, 99, 255, 0.4) !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+.stats-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(108, 99, 255, 0.3) !important;
+    transition: all 0.3s ease;
+}
+
+/* Sidebar Styling */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #e0c3fc 0%, #8ec5fc 100%) !important;
+}
+section[data-testid="stSidebar"] * {
+    color: #1a1a2e !important;
+}
+
+/* Sidebar Radio Button - Remove Red Color on Selection */
+div[data-testid="stRadio"] > div {
+    background: transparent !important;
+}
+
+div[data-testid="stRadio"] label {
+    color: #1a1a2e !important;
+}
+
+div[data-testid="stRadio"] .stRadio > div[role="radiogroup"] > label {
+    background: transparent !important;
+    color: #1a1a2e !important;
+}
+
+div[data-testid="stRadio"] .stRadio > div[role="radiogroup"] > label:has(input:checked) {
+    background: transparent !important;
+    color: #1a1a2e !important;
+}
+
+div[data-testid="stRadio"] .stRadio > div[role="radiogroup"] > label:has(input:checked)::before {
+    background: transparent !important;
+    box-shadow: none !important;
+}
+
+/* Ensure native radio accent isn't showing red */
+div[data-testid="stRadio"] input[type="radio"] {
+    accent-color: transparent !important;
+}
+
+/* Alert Messages Styling for Visibility */
+.stAlert-success {
+    background: rgba(76, 175, 80, 0.9) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(76, 175, 80, 0.5) !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    font-weight: 500 !important;
+}
+
+.stAlert-error {
+    background: rgba(244, 67, 54, 0.9) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(244, 67, 54, 0.5) !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    font-weight: 500 !important;
+}
+
+.stAlert-warning {
+    background: rgba(255, 152, 0, 0.9) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 152, 0, 0.5) !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    font-weight: 500 !important;
+}
+
+.stAlert-info {
+    background: rgba(33, 150, 243, 0.9) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(33, 150, 243, 0.5) !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    font-weight: 500 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -394,13 +559,97 @@ else:
 if 'sidebar_selected' not in st.session_state or st.session_state.sidebar_selected not in sidebar_options:
     st.session_state.sidebar_selected = sidebar_options[0]
 
+# SIDEBAR PROFILE SECTION - ALWAYS VISIBLE (logged-in or not)
+st.sidebar.markdown(
+    """
+    <style>
+    .profile-section { margin: 0 !important; padding: 5px 0 !important; }
+    .profile-title { margin: 0 !important; padding: 0 !important; }
+    button[key="profile_upload_btn"] { padding: 2px 4px !important; font-size: 10px !important; height: 28px !important; }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+st.sidebar.markdown("### 👤 Profile", unsafe_allow_html=True)
+
+if st.session_state.logged_in:
+    # Profile card - image with + icon attached
+    col_img, col_btn = st.sidebar.columns([3, 0.8], gap="small")
+    
+    with col_img:
+        if st.session_state.avatar:
+            try:
+                st.image(st.session_state.avatar, width=60)
+            except Exception:
+                st.image("https://i.pravatar.cc/200?u=" + (st.session_state.username or "user"), width=60)
+        else:
+            st.image("https://i.pravatar.cc/200?u=" + (st.session_state.username or "user"), width=60)
+    
+    with col_btn:
+        st.write("")
+        if st.button("➕", key="profile_upload_btn", help="Upload"):
+            st.session_state.show_profile_upload = not st.session_state.show_profile_upload
+    
+    # File uploader appears when + clicked
+    if st.session_state.get("show_profile_upload", False):
+        uploaded_image = st.sidebar.file_uploader("Select image", type=["jpg", "jpeg", "png"], key="profile_pic_upload", label_visibility="collapsed")
+        
+        if uploaded_image is not None:
+            # Read and save the image
+            import base64
+            image_bytes = uploaded_image.read()
+            image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+            image_data_uri = f"data:image/{uploaded_image.type};base64,{image_base64}"
+            
+            st.session_state.avatar = image_data_uri
+            st.session_state.show_profile_upload = False
+            # Update in database
+            success, message = database.update_user_profile(st.session_state.user_id, avatar=image_data_uri)
+            if success:
+                st.success("Photo updated!")
+                st.rerun()
+            else:
+                st.error(message)
+    
+    # User details (compact)
+    st.sidebar.markdown(f"<p style='margin: 0; padding: 0; font-size: 0.9rem;'><b>{st.session_state.username or 'User'}</b></p>", unsafe_allow_html=True)
+    if st.session_state.age:
+        st.sidebar.markdown(f"<p style='margin: 0; padding: 0; font-size: 0.8rem;'>Age: {st.session_state.age}</p>", unsafe_allow_html=True)
+    st.sidebar.markdown(f"<p style='margin: 0; padding: 0; font-size: 0.8rem;'>Email: {(st.session_state.email or 'N/A')}</p>", unsafe_allow_html=True)
+    
+    # Expandable profile details for age editing
+    with st.sidebar.expander("Edit Profile"):
+        new_age = st.number_input(
+            "Age", 
+            min_value=0, 
+            max_value=120, 
+            value=(st.session_state.age if st.session_state.age else 25),
+            key="sidebar_age_edit"
+        )
+        
+        if st.button("Save Age", key="save_age_btn"):
+            st.session_state.age = new_age
+            # Update in database
+            success, message = database.update_user_profile(st.session_state.user_id, age=new_age)
+            if success:
+                st.success("Age updated!")
+            else:
+                st.error(message)
+else:
+    # Not logged in - show plain profile tab with no image
+    st.sidebar.markdown("<p style='margin: 0; padding: 10px 0; font-size: 0.8rem; text-align: center; color: #999;'>Login to view profile</p>", unsafe_allow_html=True)
+
+    
+    st.sidebar.divider()
+
 # Sidebar navigation
-st.sidebar.title(" 1.Navigation")
-sidebar_selection = st.sidebar.radio("Go to:", sidebar_options, index=sidebar_options.index(st.session_state.sidebar_selected))
+st.sidebar.title(" Navigation")
+sidebar_selection = st.sidebar.selectbox("Go to:", sidebar_options, index=sidebar_options.index(st.session_state.sidebar_selected))
 
 if sidebar_selection != st.session_state.sidebar_selected:
     st.session_state.sidebar_selected = sidebar_selection
     st.rerun()
+
 # MAIN NAVIGATION
 if st.session_state.logged_in:
     menu_options = ["Home", "Features", "How It Works", "Detect Emotion", "Dashboard", "Admin"]
@@ -526,7 +775,7 @@ elif selected == "Detect Emotion":
     with col1:
         st.markdown("""
         <div class="card">
-            <h3>🎮 Camera Controls</h3>
+            <h3> Camera Controls</h3>
         </div>
         """, unsafe_allow_html=True)
         
@@ -539,15 +788,17 @@ elif selected == "Detect Emotion":
                 if success:
                     st.session_state.detector = detector
                     st.session_state.camera_active = True
+                    st.session_state.camera_start_time = time.time()
                     st.rerun()
                 else:
                     st.error(message)
         else:
-            if st.button("⏹️ Stop Camera", key="stop_camera"):
+            if st.button("⏹ Stop Camera", key="stop_camera"):
                 if st.session_state.detector:
                     st.session_state.detector.release()
                 st.session_state.detector = None
                 st.session_state.camera_active = False
+                st.session_state.camera_start_time = None
                 st.rerun()
         
         # Camera info
@@ -563,24 +814,80 @@ elif selected == "Detect Emotion":
     
     with col2:
         if st.session_state.camera_active and st.session_state.detector:
-            # Get camera frame
-            success, frame = st.session_state.detector.get_frame()
+            # Create placeholders for updating content without full reruns
+            frame_placeholder = st.empty()
+            info_placeholder = st.empty()
+            emotion_col1, emotion_col2, emotion_col3 = st.columns(3)
+            emotion_display_col1 = emotion_col1.empty()
+            emotion_display_col2 = emotion_col2.empty()
+            emotion_display_col3 = emotion_col3.empty()
             
-            if success and frame is not None:
-                # Process frame for face detection
-                processed_frame, faces = st.session_state.detector.process_frame(frame)
-                
-                # Convert to image for display
-                img = camera_detection.convert_frame_to_image(processed_frame)
-                st.image(img, caption="Live Camera Feed - Face Detection", use_container_width=True)
-                
-                # Display detection results
-                if len(faces) > 0:
-                    st.success(f"✓ Detected {len(faces)} face(s)!")
-                else:
-                    st.warning("No face detected. Please position your face in the frame.")
-            else:
-                st.error("Unable to capture frame. Please check your camera.")
+            # Track detected emotions
+            emotions_detected = []
+            start_time = time.time()
+            frame_count = 0
+            
+            # Smooth camera loop - capture frames continuously
+            while st.session_state.camera_active:
+                try:
+                    success, frame = st.session_state.detector.get_frame()
+                    if success and frame is not None:
+                        # Process frame for face and emotion detection
+                        processed_frame, face_data = st.session_state.detector.process_frame(frame)
+                        img = camera_detection.convert_frame_to_image(processed_frame)
+                        
+                        # Update frame display
+                        frame_placeholder.image(img, caption="Live Camera Feed - Emotion Detection", use_container_width=True)
+                        
+                        # Update face/emotion info
+                        if len(face_data) > 0:
+                            info_placeholder.success(f"✓ Detected {len(face_data)} face(s)")
+                            
+                            # Display emotions for detected faces
+                            emotions_detected = []
+                            for i, (x, y, w, h, emotion, confidence) in enumerate(face_data):
+                                emotions_detected.append({
+                                    'emotion': emotion,
+                                    'confidence': confidence
+                                })
+                                
+                                if i == 0:
+                                    emotion_display_col1.metric(f"Face {i+1} Emotion", emotion, f"{confidence:.1%}")
+                                elif i == 1:
+                                    emotion_display_col2.metric(f"Face {i+1} Emotion", emotion, f"{confidence:.1%}")
+                                elif i == 2:
+                                    emotion_display_col3.metric(f"Face {i+1} Emotion", emotion, f"{confidence:.1%}")
+                        else:
+                            info_placeholder.warning("⚠ No face detected. Position your face in the frame.")
+                            emotion_display_col1.empty()
+                            emotion_display_col2.empty()
+                            emotion_display_col3.empty()
+                    else:
+                        info_placeholder.error("❌ Unable to capture frame. Check your camera.")
+                    
+                    frame_count += 1
+                    
+                    # Check if session state was changed (Stop button clicked)
+                    if not st.session_state.camera_active:
+                        break
+                    
+                    # Auto-stop after 60 seconds
+                    elapsed = time.time() - start_time
+                    if elapsed > 60:
+                        st.session_state.camera_active = False
+                        if st.session_state.detector:
+                            st.session_state.detector.release()
+                        st.session_state.detector = None
+                        st.session_state.camera_start_time = None
+                        st.rerun()
+                        break
+                    
+                    # Small delay between frames (33ms = ~30fps)
+                    time.sleep(0.033)
+                    
+                except Exception as e:
+                    info_placeholder.error(f"Error: {str(e)}")
+                    break
         else:
             st.markdown("""
             <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: rgba(255,255,255,0.1); border-radius: 20px;">
@@ -641,6 +948,11 @@ elif selected == "Auth":
                     st.session_state.user_id = user_data['id']
                     st.session_state.username = user_data['username']
                     st.session_state.email = user_data['email']
+                    # Fetch additional profile data from database
+                    profile_data = database.get_user_profile(user_data['id'])
+                    if profile_data:
+                        st.session_state.age = profile_data.get('age')
+                        st.session_state.avatar = profile_data.get('avatar')
                     st.session_state.redirect_to = "Detect Emotion"  # Redirect to camera after login
                     st.success(message)
                     st.rerun()
@@ -705,7 +1017,7 @@ elif selected == "Dashboard":
 elif selected == "Admin":
     st.markdown("""
     <div class="auth-section">
-        <h2>🛡️ Admin Dashboard</h2>
+        <h2> Admin Dashboard</h2>
         <p>View all registered users and system data</p>
     </div>
     """, unsafe_allow_html=True)
@@ -728,17 +1040,54 @@ elif selected == "Admin":
     tab1, tab2, tab3 = st.tabs(["📋 Users", "📝 Activity Logs", "😊 Emotion Logs"])
     
     with tab1:
-        st.markdown("Registered Users")
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 15px; padding: 20px; margin-top: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+            <h3 style="color: #ffffff !important; font-weight: bold; font-size: 1.4rem; margin-bottom: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.3);">📋 Registered Users</h3>
+        """, unsafe_allow_html=True)
         users = database.get_all_users()
         if users:
             import pandas as pd
             df = pd.DataFrame(users)
+            # Style the dataframe with dark background and light text
+            st.markdown("""
+            <style>
+            div[data-testid="stDataFrame"] {
+                background: linear-gradient(135deg, #2d1b4e 0%, #1e1e2f 100%) !important;
+                border-radius: 10px !important;
+                border: 1px solid rgba(108, 99, 255, 0.3);
+            }
+            div[data-testid="stDataFrame"] table {
+                background: transparent !important;
+            }
+            div[data-testid="stDataFrame"] thead tr {
+                background: linear-gradient(135deg, #6c63ff, #00d2ff) !important;
+            }
+            div[data-testid="stDataFrame"] thead th {
+                background: linear-gradient(135deg, #6c63ff, #00d2ff) !important;
+                color: #ffffff !important;
+                font-weight: 600 !important;
+                border-bottom: 2px solid rgba(255, 255, 255, 0.3) !important;
+            }
+            div[data-testid="stDataFrame"] tbody td {
+                background: rgba(255, 255, 255, 0.1) !important;
+                color: #ffffff !important;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+            }
+            div[data-testid="stDataFrame"] tbody tr:hover td {
+                background: rgba(108, 99, 255, 0.3) !important;
+            }
+            div[data-testid="stDataFrame"] tbody tr:nth-child(even) td {
+                background: rgba(255, 255, 255, 0.05) !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
             st.dataframe(df, use_container_width=True)
         else:
             st.info("No users registered yet!")
+        st.markdown("</div>", unsafe_allow_html=True)
     
     with tab2:
-        st.markdown(" User Activity")
+        st.markdown("<h3 style='color: #ffffff !important;'>📝 User Activity</h3>", unsafe_allow_html=True)
         activities = database.get_user_activity()
         if activities:
             import pandas as pd
@@ -756,6 +1105,7 @@ elif selected == "Admin":
             st.dataframe(df, use_container_width=True)
         else:
             st.info("No emotion logs recorded yet!")
+
 
 # FOOTER
 st.markdown("""

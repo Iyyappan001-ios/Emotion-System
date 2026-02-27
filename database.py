@@ -22,9 +22,20 @@ def init_db():
             username TEXT UNIQUE NOT NULL,
             email TEXT UNIQUE NOT NULL,
             password TEXT NOT NULL,
+            age INTEGER,
+            avatar TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Add age and avatar columns if they don't exist (migration)
+    cursor.execute("PRAGMA table_info(users)")
+    columns = [column[1] for column in cursor.fetchall()]
+    
+    if 'age' not in columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN age INTEGER")
+    if 'avatar' not in columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN avatar TEXT")
     
     # User activity/logs table
     cursor.execute('''
@@ -294,6 +305,65 @@ def delete_user(user_id):
         conn.commit()
         conn.close()
         return True, "User deleted successfully!"
+    except Exception as e:
+        return False, f"Error: {str(e)}"
+
+def get_user_profile(user_id):
+    """Get user profile data"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, username, email, age, avatar, created_at
+            FROM users
+            WHERE id = ?
+        """, (user_id,))
+        
+        user = cursor.fetchone()
+        conn.close()
+        
+        if user:
+            return dict(user)
+        return None
+    except Exception as e:
+        print(f"Error getting user profile: {e}")
+        return None
+
+def update_user_profile(user_id, age=None, avatar=None, username=None, email=None):
+    """Update user profile data"""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        updates = []
+        values = []
+        
+        if age is not None:
+            updates.append("age = ?")
+            values.append(age)
+        if avatar is not None:
+            updates.append("avatar = ?")
+            values.append(avatar)
+        if username is not None:
+            updates.append("username = ?")
+            values.append(username)
+        if email is not None:
+            updates.append("email = ?")
+            values.append(email)
+        
+        if not updates:
+            conn.close()
+            return True, "No updates provided"
+        
+        values.append(user_id)
+        query = f"UPDATE users SET {', '.join(updates)} WHERE id = ?"
+        
+        cursor.execute(query, values)
+        conn.commit()
+        conn.close()
+        
+        return True, "Profile updated successfully!"
     except Exception as e:
         return False, f"Error: {str(e)}"
 

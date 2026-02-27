@@ -1,9 +1,15 @@
-streamlit
+streamlit>=1.24.0
 sqlite3
 bcrypt
 streamlit-extras
 streamlit-option-menu
 pandas
-opencv-python
+opencv-python>=4.8.0
 numpy
 Pillow
+tensorflow>=2.13.0
+scikit-learn
+keras
+deepface
+mtcnn
+retinaface
