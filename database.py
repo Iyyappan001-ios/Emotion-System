@@ -62,6 +62,17 @@ def init_db():
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
     ''')
+
+    # Emotion session summary table (one row per camera session)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS emotion_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER,
+            dominant_emotion TEXT NOT NULL,
+            session_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
     
     conn.commit()
     conn.close()
@@ -366,6 +377,64 @@ def update_user_profile(user_id, age=None, avatar=None, username=None, email=Non
         return True, "Profile updated successfully!"
     except Exception as e:
         return False, f"Error: {str(e)}"
+
+def log_user_activity(user_id, action, details):
+    """Log a user activity event (wrapper for convenience)."""
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO user_activity (user_id, action, details) VALUES (?, ?, ?)",
+            (user_id, action, details),
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error logging user activity: {e}")
+        return False
+
+
+def save_dominant_emotion(user_id, dominant_emotion):
+    """
+    Save the overall dominant emotion of a camera session.
+    This is the final emotion returned for the recommendation engine.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO emotion_sessions (user_id, dominant_emotion) VALUES (?, ?)",
+            (user_id, dominant_emotion),
+        )
+        conn.commit()
+        conn.close()
+        return True
+    except Exception as e:
+        print(f"Error saving dominant emotion: {e}")
+        return False
+
+
+def get_latest_dominant_emotion(user_id):
+    """
+    Get the most recently saved dominant emotion for a user.
+    Used by the recommendation engine.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """SELECT dominant_emotion FROM emotion_sessions
+               WHERE user_id = ? ORDER BY session_start DESC LIMIT 1""",
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        conn.close()
+        return row["dominant_emotion"] if row else None
+    except Exception as e:
+        print(f"Error getting latest dominant emotion: {e}")
+        return None
+
 
 # Initialize database on module import
 init_db()

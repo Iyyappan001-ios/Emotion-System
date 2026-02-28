@@ -1,8 +1,6 @@
 import streamlit as st
 import streamlit_option_menu
 import database
-import camera_detection
-import time
 
 # SESSION STATE INIT 
 if 'user_id' not in st.session_state:
@@ -15,13 +13,6 @@ if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'redirect_to' not in st.session_state:
     st.session_state.redirect_to = None
-if 'camera_active' not in st.session_state:
-    st.session_state.camera_active = False
-if 'detector' not in st.session_state:
-    st.session_state.detector = None
-# timestamp used to optionally auto‑stop the camera after a period
-if 'camera_start_time' not in st.session_state:
-    st.session_state.camera_start_time = None
 if 'age' not in st.session_state:
     st.session_state.age = None
 if 'avatar' not in st.session_state:
@@ -551,7 +542,7 @@ st.markdown("""
 
 #  SIDEBAR NAVIGATION
 if st.session_state.logged_in:
-    sidebar_options = ["Home", "Features", "How It Works", "Detect Emotion", "Dashboard", "Admin"]
+    sidebar_options = ["Home", "Features", "How It Works", "Dashboard", "Admin"]
 else:
     sidebar_options = ["Home", "Features", "How It Works", "Auth"]
 
@@ -652,11 +643,11 @@ if sidebar_selection != st.session_state.sidebar_selected:
 
 # MAIN NAVIGATION
 if st.session_state.logged_in:
-    menu_options = ["Home", "Features", "How It Works", "Detect Emotion", "Dashboard", "Admin"]
+    menu_options = ["Home", "Features", "How It Works", "Emotion Detection", "Dashboard", "Admin"]
     menu_icons = ["house", "stars", "diagram-3", "camera", "person-circle", "shield-check"]
 else:
     menu_options = ["Home", "Features", "How It Works", "Auth"]
-    menu_icons = ["house", "stars", "diagram-3", "person-circle"]
+    menu_icons = ["house", "stars", "diagram-3", "camera", "person-circle"]
 
 default_idx = menu_options.index(st.session_state.sidebar_selected) if st.session_state.sidebar_selected in menu_options else 0
 
@@ -665,10 +656,6 @@ if st.session_state.redirect_to == "Auth":
     st.session_state.redirect_to = None
     st.session_state.sidebar_selected = "Auth"
     default_idx = menu_options.index("Auth") if "Auth" in menu_options else 0
-elif st.session_state.redirect_to == "Detect Emotion":
-    st.session_state.redirect_to = None
-    st.session_state.sidebar_selected = "Detect Emotion"
-    default_idx = menu_options.index("Detect Emotion") if "Detect Emotion" in menu_options else 0
 
 selected = streamlit_option_menu.option_menu(
     menu_title=None,
@@ -687,8 +674,13 @@ selected = streamlit_option_menu.option_menu(
 if selected != st.session_state.sidebar_selected:
     st.session_state.sidebar_selected = selected
 
+# EMOTION DETECTION
+if selected == "Emotion Detection":
+    import emotion_detection_page
+    emotion_detection_page.main()
+
 # HOME
-if selected == "Home":
+elif selected == "Home":
     st.markdown("""
     <div style="padding: 80px 8% 120px; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center;">
         <div>
@@ -699,7 +691,7 @@ if selected == "Home":
             </p>
         </div>
         <div class="visual">
-            <h3>Detectable  Emotions</h3>
+            <h3>Detectable Emotions</h3>
             <div class="emotion-grid">
                 <div class="emotion">😊 Happy</div>
                 <div class="emotion">😌 Calm</div>
@@ -745,158 +737,20 @@ elif selected == "How It Works":
         <h2>How It Works</h2>
         <div class="steps">
             <div class="step">
-                <h4>1. Capture Emotion</h4>
-                <p>Your webcam captures facial expressions in real time.</p>
+                <h4>1. Select Your Mood</h4>
+                <p>Choose your current mood from the available emotion categories.</p>
             </div>
             <div class="step">
-                <h4>2. Analyze Emotions through Face</h4>
-                <p>AI models classify emotions using trained datasets.</p>
+                <h4>2. Get Recommendations</h4>
+                <p>Our AI analyzes your selected mood and recommends content.</p>
             </div>
             <div class="step">
-                <h4>3. Recommend Content</h4>
-                <p>Relevant movies, music, games, and books are suggested instantly.</p>
+                <h4>3. Enjoy Content</h4>
+                <p>Discover movies, music, games, and books that match your mood.</p>
             </div>
         </div>
     </div>
     """, unsafe_allow_html=True)
-
-# DETECT EMOTION 
-elif selected == "Detect Emotion":
-    st.markdown("""
-    <div class="auth-section">
-        <h2>📸 Detect Your Emotion</h2>
-        <p>Use your camera to detect your current emotional state</p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Camera controls
-    col1, col2 = st.columns([1, 3])
-    
-    with col1:
-        st.markdown("""
-        <div class="card">
-            <h3> Camera Controls</h3>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # Start/Stop camera button
-        if not st.session_state.camera_active:
-            if st.button("📷 Start Camera", key="start_camera"):
-                # Initialize camera
-                detector = camera_detection.CameraDetector()
-                success, message = detector.initialize()
-                if success:
-                    st.session_state.detector = detector
-                    st.session_state.camera_active = True
-                    st.session_state.camera_start_time = time.time()
-                    st.rerun()
-                else:
-                    st.error(message)
-        else:
-            if st.button("⏹ Stop Camera", key="stop_camera"):
-                if st.session_state.detector:
-                    st.session_state.detector.release()
-                st.session_state.detector = None
-                st.session_state.camera_active = False
-                st.session_state.camera_start_time = None
-                st.rerun()
-        
-        # Camera info
-        st.markdown("""
-        <div class="card" style="margin-top: 20px;">
-            <h4> Instructions</h4>
-            <p>1. Click "Start Camera" to begin</p>
-            <p>2. Allow camera access when prompted</p>
-            <p>3. Position your face in the frame</p>
-            <p>4. The system will detect your emotion</p>
-        </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        if st.session_state.camera_active and st.session_state.detector:
-            # Create placeholders for updating content without full reruns
-            frame_placeholder = st.empty()
-            info_placeholder = st.empty()
-            emotion_col1, emotion_col2, emotion_col3 = st.columns(3)
-            emotion_display_col1 = emotion_col1.empty()
-            emotion_display_col2 = emotion_col2.empty()
-            emotion_display_col3 = emotion_col3.empty()
-            
-            # Track detected emotions
-            emotions_detected = []
-            start_time = time.time()
-            frame_count = 0
-            
-            # Smooth camera loop - capture frames continuously
-            while st.session_state.camera_active:
-                try:
-                    success, frame = st.session_state.detector.get_frame()
-                    if success and frame is not None:
-                        # Process frame for face and emotion detection
-                        processed_frame, face_data = st.session_state.detector.process_frame(frame)
-                        img = camera_detection.convert_frame_to_image(processed_frame)
-                        
-                        # Update frame display
-                        frame_placeholder.image(img, caption="Live Camera Feed - Emotion Detection", use_container_width=True)
-                        
-                        # Update face/emotion info
-                        if len(face_data) > 0:
-                            info_placeholder.success(f"✓ Detected {len(face_data)} face(s)")
-                            
-                            # Display emotions for detected faces
-                            emotions_detected = []
-                            for i, (x, y, w, h, emotion, confidence) in enumerate(face_data):
-                                emotions_detected.append({
-                                    'emotion': emotion,
-                                    'confidence': confidence
-                                })
-                                
-                                if i == 0:
-                                    emotion_display_col1.metric(f"Face {i+1} Emotion", emotion, f"{confidence:.1%}")
-                                elif i == 1:
-                                    emotion_display_col2.metric(f"Face {i+1} Emotion", emotion, f"{confidence:.1%}")
-                                elif i == 2:
-                                    emotion_display_col3.metric(f"Face {i+1} Emotion", emotion, f"{confidence:.1%}")
-                        else:
-                            info_placeholder.warning("⚠ No face detected. Position your face in the frame.")
-                            emotion_display_col1.empty()
-                            emotion_display_col2.empty()
-                            emotion_display_col3.empty()
-                    else:
-                        info_placeholder.error("❌ Unable to capture frame. Check your camera.")
-                    
-                    frame_count += 1
-                    
-                    # Check if session state was changed (Stop button clicked)
-                    if not st.session_state.camera_active:
-                        break
-                    
-                    # Auto-stop after 60 seconds
-                    elapsed = time.time() - start_time
-                    if elapsed > 60:
-                        st.session_state.camera_active = False
-                        if st.session_state.detector:
-                            st.session_state.detector.release()
-                        st.session_state.detector = None
-                        st.session_state.camera_start_time = None
-                        st.rerun()
-                        break
-                    
-                    # Small delay between frames (33ms = ~30fps)
-                    time.sleep(0.033)
-                    
-                except Exception as e:
-                    info_placeholder.error(f"Error: {str(e)}")
-                    break
-        else:
-            st.markdown("""
-            <div style="display: flex; justify-content: center; align-items: center; height: 400px; background: rgba(255,255,255,0.1); border-radius: 20px;">
-                <div style="text-align: center;">
-                    <p style="font-size: 4rem;">📷</p>
-                    <p style="font-size: 1.2rem; color: #e0e0e0;">Click "Start Camera" to begin emotion detection</p>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
 
 #  AUTH
 elif selected == "Auth":
@@ -953,7 +807,6 @@ elif selected == "Auth":
                     if profile_data:
                         st.session_state.age = profile_data.get('age')
                         st.session_state.avatar = profile_data.get('avatar')
-                    st.session_state.redirect_to = "Detect Emotion"  # Redirect to camera after login
                     st.success(message)
                     st.rerun()
                 else:

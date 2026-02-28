@@ -1,9 +1,13 @@
-# TODO - Camera Freeze Fix
+# TODO - Remove Camera Detection Parts
 
-## Task: Fix camera freezing and enable continuous emotion detection
+## Files to Delete:
+- [ ] Delete camera_emotion_detection.py
+- [ ] Delete run_emotion_detection.bat
 
-### Steps:
-1. [ ] Add session state variables for auto-refresh and detection tracking in app.py
-2. [ ] Modify "Detect Emotion" section to enable automatic camera feed refresh
-3. [ ] Add continuous emotion detection with auto-refresh mechanism
-4. [ ] Test the implementation
+## Files to Modify:
+- [ ] Modify emotion_detection_page.py - Remove OpenCV Direct option
+- [ ] Modify emotion_detector.py - Remove camera functions
+- [ ] Modify app.py - Remove camera icon from menu
+
+## Completed:
+- [x] Plan confirmed by user
